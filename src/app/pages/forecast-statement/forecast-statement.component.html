@@ -1,0 +1,246 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-slate-300 text-gray-800">
+  <!-- En-tête -->
+  <div class="mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-4xl font-bold text-gray-900">📊 Forecast Statement</h1>
+      <p class="mt-1 text-sm text-gray-600 italic">{{ center?.name }} – {{ budget?.year }}</p>
+    </div>
+    <button 
+      (click)="viewBudgetDetails()"
+      class="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition shadow"
+    >
+      ← Back to Budget Details
+    </button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="bg-white shadow-xl rounded-3xl p-8 space-y-10">
+    
+    <div class="flex flex-col items-center space-y-4">
+      <div class="flex left-10">
+        <p class="text-2xl font-bold italic text-center">Center banck amount <br> <span class="text-3xl font-bold text-green-800"> {{center?.amount | customcurrency }} </span> </p>
+      </div>
+      <!-- Select réduit et centré -->
+      <div class="w-1/2">
+        <div class="relative">
+          <label for="source-select" class="absolute -top-2 left-10 px-1 bg-white text-sm font-medium text-gray-700 whitespace-nowrap">
+            Filter by financing source
+          </label>
+          <select 
+            (click)="loadExpenses(); loadFinancings(); loadRecipesByBudget()" 
+            (keydown.enter)="loadExpenses(); loadFinancings(); loadRecipesByBudget()" 
+            [(ngModel)]="source" 
+            class="w-full border-2 border-blue-500 bg-blue-100 rounded-md px-3 py-2 pt-6 pb-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+            required>
+            <option value="">All sources</option>
+            <option *ngFor="let financing of financings" [value]="financing.name">
+              {{ financing.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <!-- Tableau Recettes -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm border border-gray-300 rounded-lg shadow-sm">
+          <thead>
+            <tr>
+              <th colspan="4" class="bg-orange-500 text-white py-4 px-4 rounded-t-lg text-lg">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-xl">💰 RECIPES</span>
+                  <button 
+                    (click)="showAddBudgetFundingForm = !showAddBudgetFundingForm"
+                    class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 transition"
+                  >
+                    ➕ Add a source of financing
+                  </button>
+                </div>
+              </th>
+            </tr>
+
+            <!-- Formulaire ajout source -->
+            <tr *ngIf="showAddBudgetFundingForm" class="bg-gray-50">
+              <td colspan="4" class="p-4">
+                <form [formGroup]="budgetFundingForm" (ngSubmit)="onSubmitBudgetFunding()" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  
+                  <div class="relative">
+                    <label class="absolute -top-2 left-2 px-2 bg-white text-sm font-medium text-gray-700 whitespace-nowrap">
+                      Financing
+                    </label>
+                    <select formControlName="financingId" class="w-full border-2 border-blue-500 rounded-md px-3 pt-6 pb-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                      <option value="" disabled selected>Select a source</option>
+                      <option *ngFor="let financing of financings" [value]="financing.id">
+                        {{ financing.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="relative">
+                    <div class="relative w-full">
+                      <label class="absolute -top-2 left-2 px-2 bg-white text-sm font-medium text-gray-700 whitespace-nowrap" >
+                        Bank account
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Bank account"
+                        formControlName="amount"
+                        class="w-full border-2 border-blue-500 rounded-md px-3 pt-6 pb-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    <div *ngIf="recipeBanckAcountTotal + budgetFundingForm.get('amount')?.value > center?.amount!" class="text-red-500 text-sm mt-1 font-bold italic">
+                    The banck amount is insufficient !!!
+                  </div>
+                  </div>
+                  
+                    <div class="flex gap-3">
+                      <button
+                        type="submit"
+                        class="bg-green-600 text-white px-5 py-2 rounded-md shadow-md hover:bg-green-700 transition transform hover:scale-105 cursor-pointer"
+                      >
+                        {{ isEditMode ? '💾 Edit' : '➕ Add' }}
+                      </button>
+                      <button
+                        type="button"
+                        (click)="cancelEdit()"
+                        class="bg-gray-400 text-white px-5 py-2 rounded-md shadow-md hover:bg-gray-500 transition transform hover:scale-105 cursor-pointer"
+                      >
+                        ✖️ Cancel
+                      </button>
+                    </div>
+
+                </form>
+              </td>
+            </tr>
+
+            <tr class="bg-gray-100 text-left font-semibold text-gray-700">
+              <th class="border px-4 py-2">Heading</th>
+              <th class="border px-4 py-2">Amount</th>
+              <th class="border px-4 py-2">Status</th>
+              <th class="border px-4 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngIf="recipes?.size === 0">
+              <td colspan="4" class="text-yellow-800 bg-yellow-50 border px-4 py-3 text-center rounded">
+                ⚠️ No revenues available for this budget.
+              </td>
+            </tr>
+
+            <ng-container *ngFor="let financing of recipes | keyvalue">
+              <tr class="bg-blue-100 font-semibold text-blue-900">
+                <td colspan="4" class="border px-4 py-2">
+                  <div class="flex justify-between items-center">
+                    <span>{{ financing.key }}</span>
+                    <button (click)="toggleAddForm(financing.key)" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                      ➕ Add a recipe
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr *ngIf="selectedBudgetFundingKey === financing.key" class="bg-gray-50">
+                <td colspan="4" class="p-4">
+                  <form [formGroup]="recipeForm" (ngSubmit)="onSubmitRecipe()" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="relative">
+                      <label class="absolute -top-2 left-2 px-2 bg-white text-sm font-medium text-gray-700 whitespace-nowrap">
+                        Recipe name
+                      </label>
+                      <input type="text" formControlName="name" class="w-full border-2 border-blue-500 rounded-md px-3 pt-6 pb-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required />
+                    </div>
+                    <div class="relative">
+                      <label class="absolute -top-2 left-2 px-2 bg-white text-sm font-medium text-gray-700 whitespace-nowrap">
+                        Recipe amount
+                      </label>
+                      <input type="number" placeholder="Amount" formControlName="amount" class="w-full border-2 border-blue-500 rounded-md px-3 pt-6 pb-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required />
+                    </div>
+                      <div class="flex gap-2">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                          {{ isEditMode ? '💾 Edit' : '➕ Add' }}
+                        </button>
+                        <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" (click)="cancelEdit()">
+                          ✖️ Cancel
+                        </button>
+                      </div>
+                  </form>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="border px-4 py-2">Bank account</td>
+                <td colspan="3" class="border px-4 py-2">{{ recipeBankAccounts.get(financing.key) | customcurrency }}</td>
+              </tr>
+
+              <tr *ngFor="let recipe of financing.value" class="hover:bg-gray-50 transition">
+                <td class="border px-4 py-2">{{ recipe.recipe_name }}</td>
+                <td class="border px-4 py-2">{{ recipe.recipe_amount | customcurrency }}</td>
+                <td class="border px-4 py-2 capitalize">{{ recipe.recipe_status }}</td>
+                <td class="border px-4 py-2 text-right space-x-2" *ngIf="recipe.recipe_status === 'PENDING'">
+                  <button (click)="confirmRecipe(recipe)" class="text-green-600 hover:text-green-800">✔️ Confirm</button>
+                  <button (click)="onEditRecipe(recipe)" class="text-indigo-600 hover:text-indigo-800">✏️ Edit</button>
+                </td>
+              </tr>
+
+              <tr class="bg-green-100 font-bold">
+                <td class="border px-4 py-2">Total {{ financing.key }}</td>
+                <td colspan="3" class="border px-4 py-2 text-right">
+                  {{ recipeTotals.get(financing.key) | customcurrency }}
+                </td>
+              </tr>
+            </ng-container>
+
+            <tr class="bg-pink-200 font-bold">
+              <td class="border px-4 py-2">TOTAL REVENUES (A)</td>
+              <td colspan="3" class="border px-4 py-2 text-right">
+                {{ recipeTotalGlobal | customcurrency }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tableau Dépenses -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm border border-gray-300 rounded-lg shadow-sm">
+          <thead>
+            <tr>
+              <th colspan="3" class="bg-orange-400 text-white text-center py-4 rounded-t-md text-lg font-bold">💸 EXPENSES</th>
+            </tr>
+            <tr class="bg-gray-100 font-semibold text-gray-700">
+              <th class="border px-4 py-2 text-left">Code / Line</th>
+              <th class="border px-4 py-2 text-left">Heading</th>
+              <th class="border px-4 py-2 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let balance of nomenclatureBalances" class="hover:bg-gray-50 transition">
+              <td class="border px-4 py-2">{{ balance.code }}</td>
+              <td class="border px-4 py-2">{{ balance.libele }}</td>
+              <td class="border px-4 py-2 text-right">{{ balance.total | customcurrency }}</td>
+            </tr>
+            <tr class="bg-pink-200 font-semibold">
+              <td colspan="2" class="border px-4 py-2">TOTAL EXPENSES (B)</td>
+              <td class="border px-4 py-2 text-right">{{ totalBalance | customcurrency }}</td>
+            </tr>
+            <tr *ngIf="recipeTotalGlobal - totalBalance > 0" class="bg-sky-200 font-semibold">
+              <td colspan="2" class="border px-4 py-2">Budget surplus</td>
+              <td class="border px-4 py-2 text-right">{{ recipeTotalGlobal - totalBalance | customcurrency }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Balance -->
+    <div class="mt-6 bg-blue-100 text-blue-900 font-bold text-center border border-blue-300 px-6 py-4 rounded-lg text-lg">
+      BALANCE (A - B) = {{ recipeTotalGlobal - totalBalance  | customcurrency }}
+      <div *ngIf="recipeTotalGlobal !== totalBalance " class="mt-4 text-yellow-800 bg-yellow-100 border border-yellow-300 rounded px-4 py-3">
+        ⚠️ The budget is out of balance. Please check your entries.
+      </div>
+    </div>
+  </div>
+</div>

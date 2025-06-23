@@ -1,0 +1,88 @@
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 relative">
+
+      <!-- Logo -->
+      <div class="flex items-center flex-shrink-0 space-x-2">
+        <img src="logo.ico" alt="Logo Budget Manager" class="w-10 h-10">
+        <span class="text-2xl font-bold text-blue-600 italic whitespace-nowrap">Budget Manager</span>
+      </div>
+
+      <!-- Navigation centrée (visible uniquement md+) -->
+      <div class="hidden md:block absolute left-1/2 transform -translate-x-1/2">
+        <nav class="flex space-x-6 items-center">
+          <ng-container *ngFor="let link of navLinks">
+            <a
+              [routerLink]="link.route"
+              routerLinkActive="border-blue-500 text-gray-900"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="border-transparent text-gray-500 hover:border-gray-300 hover:text-blue-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition"
+            >
+              {{ link.label }}
+            </a>
+          </ng-container>
+        </nav>
+      </div>
+
+      <!-- Bouton menu mobile -->
+      <div class="flex items-center md:hidden">
+        <button (click)="toggleMobileMenu()" class="text-gray-600 hover:text-blue-600 focus:outline-none">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Menu utilisateur (desktop uniquement) -->
+      <div class="hidden md:flex items-center space-x-6" *ngIf="authService.isLoggedIn()">
+        <div class="relative">
+          <button
+            (click)="toggleUserMenu()"
+            class="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 focus:outline-none"
+          >
+            <span class="truncate max-w-[120px]">{{ getUserName() }}</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2"
+              viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          <!-- Dropdown -->
+          <div
+            *ngIf="userMenuOpen"
+            class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50"
+          >
+            <a routerLink="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition">Profile</a>
+            <a routerLink="/nomenclatures" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition">Nomenclatures</a>
+            <a routerLink="/financings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition">Financings</a>
+            <button (click)="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu mobile déroulant -->
+    <div class="md:hidden mt-2" *ngIf="mobileMenuOpen">
+      <nav class="space-y-2 px-2 pb-3">
+        <ng-container *ngFor="let link of navLinks">
+          <a
+            [routerLink]="link.route"
+            routerLinkActive="text-blue-600"
+            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+          >
+            {{ link.label }}
+          </a>
+        </ng-container>
+
+        <!-- Liens utilisateur mobile -->
+        <div class="mt-4 border-t border-gray-200 pt-2" *ngIf="authService.isLoggedIn()">
+          <a routerLink="/profile" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Profile</a>
+          <a routerLink="/nomenclatures" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Nomenclatures</a>
+          <a routerLink="/financings" class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600">Financings</a>
+          <button (click)="logout()" class="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600">Logout</button>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
