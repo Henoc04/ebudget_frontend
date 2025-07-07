@@ -123,6 +123,7 @@ export class ForecastStatementComponent {
         }
       });
       this.nomenclatureBalances = Array.from(groupedMap.values());
+      this.nomenclatureBalances.sort((a, b) => a.code - b.code);
 
       this.totalBalance = nomenclatureBalances.reduce((acc, item) => acc + item.total, 0);
     });

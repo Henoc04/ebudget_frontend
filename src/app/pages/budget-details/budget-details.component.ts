@@ -89,7 +89,6 @@ selectedFilterLabel: string = 'All financings';
     this.budgetId = Number(this.route.snapshot.paramMap.get('id'));
     if (this.budgetId) {
       this.loadBudget(this.budgetId);
-      this.getCenter(this.budgetId);
       this.subActivityService.getBalanceSubActivityByBudget(this.budgetId).subscribe(balanceSubActivities => {
         this.balanceSubActivities = balanceSubActivities;
         this.totalBalance = this.balanceSubActivities.reduce((acc, item) => acc + item.total, 0);
@@ -192,6 +191,7 @@ selectedFilterLabel: string = 'All financings';
   loadBudget(id: number): void {
     this.budgetService.getBudget(id).subscribe(budget => {
       this.budget = budget;
+      this.getCenter(budget.centerId);
     });
   }
 
@@ -214,6 +214,7 @@ selectedFilterLabel: string = 'All financings';
       this.center = center;
     });
   }
+
 
   editActivity(activity: Activity): void {
     this.editingActivity = { ...activity }; // clone pour éviter modification directe
@@ -341,6 +342,9 @@ selectedFilterLabel: string = 'All financings';
 
   // Logique pour éditer une sous-activité
   submitEditSubActivity(subActivity: SubActivity): void {
+    // console.log('Submitting edited sub-activity:', subActivity);
+    // this.selectedSubActivity!.nomenclatureId = Number(this.searchNomenclatureCode);
+    subActivity.nomenclatureId = this.selectedSubActivity?.nomenclatureId || 0;
     if (!this.selectedSubActivity) return;
     this.subActivityService.updateSubActivity(subActivity).subscribe({
       next: () => {
@@ -379,6 +383,7 @@ selectedFilterLabel: string = 'All financings';
   onSelectNomenclature(selected: Nomenclature) {
     this.searchNomenclatureCode = `${selected.code} - ${selected.name}`;
     this.newSubActivity.nomenclatureId = selected.id;
+    this.selectedSubActivity!.nomenclatureId = selected.id; // Mise à jour de la sous-activité sélectionnée
   }
 
   scrollToForm() {
